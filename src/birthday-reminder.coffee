@@ -6,8 +6,9 @@
 #   "node-schedule": "^0.6.0"
 #
 # Commands:
-#   set birthday @username dd/mm/ - Set a date of birth for a user
-#   hubot list birthdays - List all set date of births
+#   birthday set @username dd/mm - Set or change a date of birth for a user
+#   birthday remove @username - Remove the birhtday reminder for the user (forever alone)
+#   birthday list - List all set date of births
 #
 # Notes:
 #   Birthday greeting messages based on Steffen Opel's
@@ -21,8 +22,9 @@ moment = require('moment')
 
 module.exports = (robot) ->
 
-  regex = /^(set birthday) (?:@?([\w .\-]+)\?*) ((0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[0-2]))\b/i
-  regex_remove = /^(remove birthday) (?:@?([\w .\-]+)\?*)\b/i
+  regex_set = /^(birthday set) (?:@?([\w .\-]+)\?*) ((0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[0-2]))\b/gi
+  regex_remove = /^(birthday remove) (?:@?([\w .\-]+)\?*)\b/gi
+  regex_list = /^(birthday list)\b/gi
 
   # runs a cron job every day at 9:30 am
   dailyBirthdayCheck = schedule.scheduleJob process.env.BIRTHDAY_CRON_STRING, ->
@@ -43,7 +45,7 @@ module.exports = (robot) ->
       msg += "\n#{quote()}"
       robot.messageRoom "#andre-max", msg
 
-  robot.hear regex, (msg) ->
+  robot.hear regex_set, (msg) ->
     name = msg.match[2]
     date = msg.match[3]
     
@@ -70,7 +72,7 @@ module.exports = (robot) ->
     else
       msg.send "#{name}? Never heard of 'em"
 
-  robot.respond /list birthdays/i, (msg) ->
+  robot.hear regex_list, (msg) ->
     users = robot.brain.data.users
     if users.length is 0
       msg.send "I don't know anyone's birthday"
